@@ -1,129 +1,153 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:tablet_tabak/model.dart';
-void main() {
-  runApp(MyApp());
-}
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-class _MyAppState extends State<MyApp> {
-  List<Map> _books = [
-    {
-      'id': 100,
-      'title': ' Winston Blue 17,00 €',
-      'price' : '59,95 €',
-      'marken': 'Winston'
-    },
-    {
-      'id': 101,
-      'title': ' Break Original 4 x 215g mit 2000 King Size Filterhülsen ',
-      'price' : '19,95 €* ',
-      'marken': 'Brake'
-    },
-    {
-      'id': 102,
-      'title': 'TEREA Probierset',
-      'price' : '39,95 €',
-      'marken': 'Iqos'
-    },
-    {
-      'id': 103,
-      'title': 'IQOS ORIGINALS DUO Slate + gratis HEETS ',
-      'price' : '49,95 €',
-      'marken': 'Iqos'
-    },
-    {
-      'id': 104,
-      'title': 'IQOS ORIGINALS DUO Silver + gratis HEETS',
-      'price' : '29,95 €',
-      'marken': 'Iqos'
-    },
-  ];
-  bool? _isEditMode = false;
-   final url = Uri.parse('https://dummyjson.com/products');
-   int counter;
-   var productResult;
+import 'dart:convert';
 
-   Future callProduct() async{
-     try{
-      final response = await http.get(url);
-      if(response.statusCode==200){
-        var result = productFromJson(response.body);
-        if(mounted)
-          setState(() {
-            counter = result.products.length;
-          });
-      }else{
-        print(response.statusCode);
-      }
-     }catch(e){
-       print(e.toString());
-     }
-   }
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  static const String _title = 'Tabak Welt App';
+
+  static Future<bool> loginControl(String email, String password) async {
+    // API
+    String apiUrl = "https://app.tabak-welt.de/api/v1/login";
+    Map<String, String> loginInformation = {
+      "email": email,
+      "password": password,
+    };
+
+    var response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(loginInformation),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: _title,
       home: Scaffold(
-        appBar: AppBar(
-          title: Text('Tabak Welt Produkte'),
-        ),
-        body: ListView(
-          children: [
-            _createDataTable(),
-            _createCheckboxField()
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-        onPressed: (){
-        callProduct();
-        },
-      ),
-
+        appBar: AppBar(title: const Text(_title)),
+        body: MyStatefulWidget(),
       ),
     );
   }
-  DataTable _createDataTable() {
-    return DataTable(columns: _createColumns(), rows: _createRows());
-  }
-  List<DataColumn> _createColumns() {
-    return [
-      DataColumn(label: Text('ID')),
-      DataColumn(label: Text('Produkte')),
-      DataColumn(label: Text('Price')),
-      DataColumn(label: Text('Marken'))
-    ];
-  }
-  List<DataRow> _createRows() {
-    return _books
-        .map((book) => DataRow(cells: [
-      DataCell(Text('#' + book['id'].toString())),
-      _createTitleCell(book['title']),
-      _createTitleCell(book['price']),
-      DataCell(Text(book['marken']))
-    ]))
-        .toList();
-  }
-  DataCell _createTitleCell(bookTitle) {
-    return DataCell(_isEditMode == true ?
-    TextFormField(initialValue: bookTitle,
-        style: TextStyle(fontSize: 16))
-        : Text(bookTitle));
-  }
-  Row _createCheckboxField() {
-    return Row(
-      children: [
-        Checkbox(
-          value: _isEditMode,
-          onChanged: (value) {
-            setState(() {
-              _isEditMode = value;
-            });
-          },
+}
+
+class MyStatefulWidget extends StatefulWidget {
+  const MyStatefulWidget({Key? key}) : super(key: key);
+
+  @override
+  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+}
+
+class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+  TextEditingController emailControl = TextEditingController();
+  TextEditingController passwordControl = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: const EdgeInsets.all(10),
+        child: ListView(
+          children: <Widget>[
+          Container(
+          width: 500,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(5),
+          child: Image.network(
+            'https://www.tabak-welt.de/raucherlounge/wp-content/uploads/2021/09/favicon-tabakwelt.png',
+            fit: BoxFit.contain,
+            width: 300,
+            height: 150,
+          ),
         ),
-        Text('Bearbeiten'),
-      ],
+        TextButton(
+          onPressed: () {},
+          child: const Text(
+            'TABAK WELT LAGERKONTROL',
+            style: TextStyle(
+              color: Colors.brown,
+              fontWeight: FontWeight.w500,
+              fontSize: 20,
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(top: 12.0),
+          padding: const EdgeInsets.all(10),
+          child: TextField(
+            controller: emailControl,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Kundenname',
+            ),
+          ),
+        ),
+        Container(
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+    child: TextField(
+      obscureText: true,
+      controller: passwordControl,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        labelText: 'Kennwort',
+      ),
+    ),
+        ),
+            Container(
+              height: 50,
+              margin: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: ElevatedButton(
+                child: const Text('Anmeldung'),
+                onPressed: () async {
+                  String email = emailControl.text;
+                  String password = passwordControl.text;
+
+                  bool loginResult = await MyApp.loginControl(email, password);
+                  if (loginResult) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Başarılı giriş'),
+                      ),
+                    );
+                    // Başarılı giriş işlemi
+                    // İstediğiniz işlemleri burada gerçekleştirebilirsiniz.
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Giriş Başarısız'),
+                          content: Text('Kullanıcı adı veya şifre hatalı.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('Tamam'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    // Başarısız giriş işlemi
+                    // Kullanıcıyı bilgilendirebilirsiniz.
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
     );
   }
 }
