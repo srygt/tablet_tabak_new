@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:tablet_tabak/screens/home_page.dart';
 
 void main() => runApp(const MyApp());
-
+class TokenHolder {
+  static String? authToken;
+}
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   static const String _title = 'Tabak Welt App';
-
+  static String? authToken; // Bearer tokeni saklamak için bir değişken
   static Future<bool> loginControl(String email, String password) async {
     // API
     String apiUrl = "https://app.tabak-welt.de/api/v1/login";
@@ -24,6 +27,8 @@ class MyApp extends StatelessWidget {
     );
 
     if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body,.);
+      authToken = responseData['token']; // Bearer tokeni sakla
       return true;
     } else {
       return false;
@@ -33,10 +38,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: _title,
       home: Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: MyStatefulWidget(),
+        body: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(0.0),
+            color: Colors.white,
+          ),
+          padding: EdgeInsets.all(30.0),
+          constraints: BoxConstraints(maxWidth: 500.0, minWidth: 250.0),
+          child: MyStatefulWidget(),
+        ),
       ),
     );
   }
@@ -117,24 +129,30 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
                   if (loginResult) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Başarılı giriş'),
+                        backgroundColor: Colors.teal,
+                        content: Text('Herzlichen Glückwunsch... Sie haben sich erfolgreich angemeldet.'),
                       ),
                     );
-                    // Başarılı giriş işlemi
+                      // Şimdi HomePage'e yönlendirelim
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                        builder: (context) => HomePage(),
+                        ),
+                        );
                     // İstediğiniz işlemleri burada gerçekleştirebilirsiniz.
                   } else {
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          title: Text('Giriş Başarısız'),
-                          content: Text('Kullanıcı adı veya şifre hatalı.'),
+                          title: Text('Fehler bei der Anmeldung'),
+                          content: Text('Benutzername oder Passwort ist falsch.'),
                           actions: [
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
-                              child: Text('Tamam'),
+                              child: Text('Ok'),
                             ),
                           ],
                         );
